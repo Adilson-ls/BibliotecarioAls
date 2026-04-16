@@ -1,0 +1,15 @@
+{
+  "name": "bibliotecario-als",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "bootstrap": "npm install",
+    "dev:backend": "npm --workspace apps/backend run start:dev",
+    "dev:frontend": "npm --workspace apps/frontend run dev",
+    "build:backend": "npm --workspace apps/backend run build",
+    "build:frontend": "npm --workspace apps/frontend run build"
+  }
+}
