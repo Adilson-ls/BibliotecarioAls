@@ -46,6 +46,22 @@ Projeto monorepo para a Biblioteca Corporativa.
 3. Iniciar backend: `npm run dev:backend`
 4. Iniciar frontend: `npm run dev:frontend`
 
+## Docker
+
+Para desenvolvimento com containerização:
+
+1. Construir e iniciar os serviços:
+   ```bash
+   docker-compose up --build
+   ```
+
+2. Acessar:
+   - Frontend: http://localhost:3001
+   - Backend: http://localhost:3000
+   - API Docs: http://localhost:3000/api
+
+3. Para desenvolvimento, os volumes estão montados para hot-reload.
+
 ## API Documentation
 
 Após iniciar o backend, acessar: `http://localhost:3333/api`
