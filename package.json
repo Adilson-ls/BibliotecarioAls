@@ -10,6 +10,9 @@
     "dev:backend": "npm --workspace apps/backend run start:dev",
     "dev:frontend": "npm --workspace apps/frontend run dev",
     "build:backend": "npm --workspace apps/backend run build",
-    "build:frontend": "npm --workspace apps/frontend run build"
+    "build:frontend": "npm --workspace apps/frontend run build",
+    "test:backend": "npm --workspace apps/backend run test",
+    "test:frontend": "npm --workspace apps/frontend run test -- --run",
+    "test": "npm run test:backend && npm run test:frontend"
   }
 }

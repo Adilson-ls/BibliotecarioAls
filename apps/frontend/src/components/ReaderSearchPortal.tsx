@@ -1,34 +1,68 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 type Work = {
   id: string;
   title: string;
   author: string;
   isbn: string;
-  availableCopies: number;
+  publisher?: string;
+  year?: number;
 };
-
-const sampleWorks: Work[] = [
-  { id: '1', title: 'Governança de TI', author: 'Maria Almeida', isbn: '9788571234567', availableCopies: 2 },
-  { id: '2', title: 'Design de Sistemas Corporativos', author: 'Fernando Souza', isbn: '9788571234568', availableCopies: 1 },
-  { id: '3', title: 'Compliance e Proteção de Dados', author: 'Ana Ribeiro', isbn: '9788571234569', availableCopies: 3 }
-];
 
 export default function ReaderSearchPortal() {
   const [query, setQuery] = useState('');
+  const [works, setWorks] = useState<Work[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const filteredWorks = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
-    if (!normalized) {
-      return sampleWorks;
-    }
+  useEffect(() => {
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(async () => {
+      setIsLoading(true);
+      setError(null);
 
-    return sampleWorks.filter((work) =>
-      [work.title, work.author, work.isbn].some((field) => field.toLowerCase().includes(normalized))
-    );
+      try {
+        const searchParam = query.trim() ? `?search=${encodeURIComponent(query.trim())}` : '';
+        const response = await fetch(`/api/works${searchParam}`, {
+          signal: controller.signal
+        });
+
+        if (!response.ok) {
+          throw new Error('Falha ao carregar o acervo.');
+        }
+
+        const data = await response.json();
+        setWorks(data);
+      } catch (fetchError) {
+        if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+          return;
+        }
+        setError('Não foi possível buscar o acervo no servidor.');
+      } finally {
+        setIsLoading(false);
+      }
+    }, 250);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timeoutId);
+    };
   }, [query]);
+
+  const statusMessage = useMemo(() => {
+    if (error) {
+      return error;
+    }
+    if (isLoading) {
+      return 'Buscando obras...';
+    }
+    if (works.length === 0) {
+      return 'Nenhuma obra encontrada para esta busca.';
+    }
+    return null;
+  }, [error, isLoading, works.length]);
 
   return (
     <section className="space-y-8">
@@ -51,22 +85,24 @@ export default function ReaderSearchPortal() {
               <th className="px-4 py-3 text-left font-semibold">Título</th>
               <th className="px-4 py-3 text-left font-semibold">Autor</th>
               <th className="px-4 py-3 text-left font-semibold">ISBN</th>
-              <th className="px-4 py-3 text-left font-semibold">Disponível</th>
+              <th className="px-4 py-3 text-left font-semibold">Editora</th>
+              <th className="px-4 py-3 text-left font-semibold">Ano</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200">
-            {filteredWorks.map((work) => (
+            {works.map((work) => (
               <tr key={work.id} className="hover:bg-white">
                 <td className="px-4 py-4 font-medium text-slate-900">{work.title}</td>
                 <td className="px-4 py-4">{work.author}</td>
                 <td className="px-4 py-4">{work.isbn}</td>
-                <td className="px-4 py-4">{work.availableCopies}</td>
+                <td className="px-4 py-4">{work.publisher ?? '—'}</td>
+                <td className="px-4 py-4">{work.year ?? '—'}</td>
               </tr>
             ))}
-            {filteredWorks.length === 0 && (
+            {statusMessage && (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-slate-500">
-                  Nenhuma obra encontrada para esta busca.
+                <td colSpan={5} className="px-4 py-6 text-center text-slate-500">
+                  {statusMessage}
                 </td>
               </tr>
             )}
